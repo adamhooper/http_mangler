@@ -2,6 +2,8 @@ package com.patch.http_mangler.http;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Message implements Iterable<Byte> {
 	private String startLine;
@@ -20,6 +22,16 @@ public class Message implements Iterable<Byte> {
 	
 	public String getHeaders() {
 		return this.headers;
+	}
+	
+	public String getHeader(String key) {
+		Pattern p = Pattern.compile("(^|\\n)" + key + ":(.*)(\\r|$)");
+		Matcher m = p.matcher(headers);
+		if (m.find()) {
+			return m.group(2).trim();
+		} else {
+			return null;
+		}
 	}
 	
 	public byte[] getBody() {

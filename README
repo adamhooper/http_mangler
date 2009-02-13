@@ -1,0 +1,34 @@
+HTTP Mangler
+
+This is a quick-and-dirty HTTP proxy server which is intended to modify HTML
+as it is passed through, to make websites output statistics about their load
+times in any browser.
+
+Loose ends abound: in particular, as a proxy server it is very inefficient
+(for instance, it does not use thread pooling) and does not gracefully handle
+all HTTP or net errors. The code is not exactly beautiful, though it could be
+worse. Pages will take a while to load with this proxy server, as it makes
+image loading slower.
+
+The metrics are not perfect and they do not tell the whole story, but they are
+generic, simple to understand, and cross-browser. Improvements on such metrics
+or ideas for new, generic metrics would be extremely welcome.
+
+SETUP
+
+1. java -jar http_mangler.jar 8080
+2. Configure your browser to use "localhost" on port 8080 as an HTTP proxy
+   (not HTTPS or any other protocol--only HTTP is supported).
+3. Browse to the websites you would like to profile.
+4. Browse to the same page to see how it behaves with a full cache. Since the
+   proxy server is slow, this will give a very different number.
+   
+DEVELOPMENT
+
+To develop, just open this folder as an Eclipse project.
+
+FUTURE
+
+The mangling possibilities are quite endless. Speedups and stabilizations,
+coupled with a dynamically-loaded mangler feature, could easily transform this
+project into a useful day-to-day HTTP proxy, such as an ad-blocking proxy.

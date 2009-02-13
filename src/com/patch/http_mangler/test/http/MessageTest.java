@@ -1,4 +1,4 @@
-package com.patch.http_mangler.test.http.net;
+package com.patch.http_mangler.test.http;
 
 import static org.junit.Assert.assertTrue;
 
