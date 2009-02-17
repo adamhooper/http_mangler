@@ -23,6 +23,16 @@ SETUP
 4. Browse to the same page to see how it behaves with a full cache. Since the
    proxy server is slow, this will give a very different number.
    
+CRAZY-CACHING
+
+We only support "crazy-cache", which means, "cache everything." This is not at
+all practical for browsing the Web: it will never refresh any pages, and the
+cache will eat endless memory. Nevertheless, crazy-caching is very useful for
+measuring web page delays: after an initial load, a page may be refreshed as
+many times as desired for benchmarking purposes and no Internet delays will
+occur (unless the page uses JavaScript to construct random or time-based URL
+requests).
+   
 DEVELOPMENT
 
 To develop, just open this folder as an Eclipse project.

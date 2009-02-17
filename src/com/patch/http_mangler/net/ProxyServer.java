@@ -3,6 +3,8 @@ package com.patch.http_mangler.net;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.patch.http_mangler.Options;
 
@@ -20,6 +22,8 @@ public class ProxyServer {
 	}
 	
 	public void run() {
+		ExecutorService executorService = Executors.newCachedThreadPool();
+		
 		while (true) {
 			Socket socket;
 			
@@ -30,7 +34,7 @@ public class ProxyServer {
 			}
 			
 			ProxyConnection proxyConnection = new ProxyConnection(socket, options);
-			new Thread(proxyConnection).start();
+			executorService.execute(proxyConnection);
 		}
 	}
 }
