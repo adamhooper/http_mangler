@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+import com.patch.http_mangler.Options;
 import com.patch.http_mangler.http.Message;
 import com.patch.http_mangler.http.MessageBuilder;
 import com.patch.http_mangler.mangling.LoadingMetricsWebsiteMangler;
@@ -17,10 +20,13 @@ import com.patch.http_mangler.proxy.ProxiedServerRequest;
 import com.patch.http_mangler.proxy.ProxiedServerResponse;
 
 public class ProxyConnection implements Runnable {
-	Socket clientSocket;
+	private Options options;
+	private Socket clientSocket;
+	private static Map<String, Message> cache = new ConcurrentHashMap<String, Message>();
 
-	public ProxyConnection(Socket clientSocket) {
+	public ProxyConnection(Socket clientSocket, Options options) {
 		this.clientSocket = clientSocket;
+		this.options = options;
 	}
 
 	public void run() {
@@ -31,43 +37,55 @@ public class ProxyConnection implements Runnable {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+		
+		Message clientResponseMessage;
+		
+		if (options.cache && cache.containsKey(clientRequestMessage.getStartLine())) {
+			clientResponseMessage = cache.get(clientRequestMessage.getStartLine());
+		} else {
+			ProxiedClientRequest clientRequest = new ProxiedClientRequest(
+					clientRequestMessage);
+			ProxiedServerRequest serverRequest = createServerRequestFromClientRequest(clientRequest);
+	
+			String serverHost = serverRequest.getHost();
+			int serverPort = serverRequest.getPort();
+	
+			Socket serverSocket;
+			try {
+				serverSocket = new Socket(serverHost, serverPort);
+			} catch (UnknownHostException e) {
+				throw new RuntimeException(e);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+	
+			try {
+				sendMessageToSocket(serverSocket, serverRequest.getMessage());
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+	
+			Message serverResponseMessage;
+	
+			try {
+				serverResponseMessage = createMessageFromSocket(serverSocket);
+				serverSocket.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+	
+			ProxiedServerResponse serverResponse = new ProxiedServerResponse(serverResponseMessage);
+			ProxiedClientResponse clientResponse = createClientResponseFromServerResponse(serverResponse, clientRequest);
 
-		ProxiedClientRequest clientRequest = new ProxiedClientRequest(
-				clientRequestMessage);
-		ProxiedServerRequest serverRequest = createServerRequestFromClientRequest(clientRequest);
-
-		String serverHost = serverRequest.getHost();
-		int serverPort = serverRequest.getPort();
-
-		Socket serverSocket;
-		try {
-			serverSocket = new Socket(serverHost, serverPort);
-		} catch (UnknownHostException e) {
-			throw new RuntimeException(e);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+			clientResponseMessage = clientResponse.getMessage();
+			
+			if (options.cache) {
+				cache.put(clientRequestMessage.getStartLine(), clientResponseMessage);
+			}
 		}
-
+		
 		try {
-			sendMessageToSocket(serverSocket, serverRequest.getMessage());
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		Message serverResponseMessage;
-
-		try {
-			serverResponseMessage = createMessageFromSocket(serverSocket);
-			serverSocket.close();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		ProxiedServerResponse serverResponse = new ProxiedServerResponse(serverResponseMessage);
-		ProxiedClientResponse clientResponse = createClientResponseFromServerResponse(serverResponse, clientRequest);
-
-		try {
-			sendMessageToSocket(clientSocket, clientResponse.getMessage());
+			sendMessageToSocket(clientSocket, clientResponseMessage);
 			clientSocket.close();
 		} catch (IOException e) {
 			throw new RuntimeException(e);

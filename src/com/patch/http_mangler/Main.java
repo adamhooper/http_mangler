@@ -4,9 +4,14 @@ import com.patch.http_mangler.net.ProxyServer;
 
 public class Main {
 	public static void main(String[] args) {
-		int port = Integer.parseInt(args[0]);
+		Options options = new Options();
+		if (args.length == 1 && "--cache".equals(args[0])) {
+			options.cache = true;
+		}
 		
-		ProxyServer proxyServer = new ProxyServer(port);
+		System.out.println("Starting server on port 8080" + (options.cache ? " with crazy-caching" : ""));
+		
+		ProxyServer proxyServer = new ProxyServer(options);
 		proxyServer.run();
 	}
 

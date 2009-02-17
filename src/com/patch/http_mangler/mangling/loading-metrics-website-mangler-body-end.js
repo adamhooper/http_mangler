@@ -15,7 +15,7 @@ function http_mangler_window_onload() {
 	
 	window.ONLOAD_END_TIME = new Date();
 }
-window.onload = http_mangler_window_onload();
+window.onload = http_mangler_window_onload;
 
 function http_mangler_window_onload_after_settimeout() {
 	var head_time = window.HEAD_END_TIME - window.HEAD_START_TIME;

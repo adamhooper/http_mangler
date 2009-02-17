@@ -16,7 +16,7 @@ or ideas for new, generic metrics would be extremely welcome.
 
 SETUP
 
-1. java -jar http_mangler.jar 8080
+1. java -jar http_mangler.jar --cache
 2. Configure your browser to use "localhost" on port 8080 as an HTTP proxy
    (not HTTPS or any other protocol--only HTTP is supported).
 3. Browse to the websites you would like to profile.
